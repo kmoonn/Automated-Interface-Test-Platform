@@ -1,6 +1,6 @@
-import os
 import logging
 from logging import handlers
+
 from backend.config import LOG_LEVEL, BASE_DIR
 
 

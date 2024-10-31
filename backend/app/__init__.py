@@ -1,13 +1,13 @@
-import logging
-
 from flask import Flask
-from backend.utils.logging_utils import init_logging
+from flask_sqlalchemy import SQLAlchemy
+from flask_restful import Api
 
-# 初始化日志器
-init_logging()
-logging.info("Test Logging")
+from backend.config import SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 
-if __name__ == '__main__':
-    app.run()
+db = SQLAlchemy(app)
+
+api = Api(app)
