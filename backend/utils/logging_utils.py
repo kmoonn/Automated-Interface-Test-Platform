@@ -9,11 +9,8 @@ def init_logging(logger_name=None, stream=None):
     logger.setLevel(LOG_LEVEL)
 
     sh = logging.StreamHandler(stream=stream)
-    fh = logging.handlers.TimedRotatingFileHandler(filename=BASE_DIR + '/log/logs.log',
-                                                   when='h',
-                                                   interval=24,
-                                                   backupCount=7,
-                                                   encoding="utf-8")
+    fh = logging.handlers.TimedRotatingFileHandler(filename=BASE_DIR + '/log/logs.log', when='h', interval=24,
+                                                   backupCount=7, encoding="utf-8")
     fmt = "[%(asctime)s %(levelname)s %(threadName)s %(filename)s %(funcName)s %(lineno)d] [%(thread)d] [%(message)s]"
     formatter = logging.Formatter(fmt)
 
@@ -22,4 +19,3 @@ def init_logging(logger_name=None, stream=None):
     logger.addHandler(fh)
 
     return logger
-

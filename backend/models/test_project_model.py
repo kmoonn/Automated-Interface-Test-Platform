@@ -19,7 +19,3 @@ class TestProjectModel(db.Model):
 
     def to_dict(self):
         return {tcm.name: getattr(self, tcm.name) for tcm in TestProjectModel.__table__.columns}
-
-
-if __name__ == '__main__':
-    pass
