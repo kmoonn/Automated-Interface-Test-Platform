@@ -4,6 +4,7 @@ from flask import request
 from flask_restful import Resource
 
 from backend.app import db, app
+from backend.models.test_project_model import TestProjectModel
 from backend.models.test_suite_model import TestSuiteModel
 from backend.utils.code_utils import CodeUtil
 from backend.utils.exception_utils import REQ_IS_EMPTY_ERROR, REQ_TYPE_ERROR, REQ_KEY_ERROR, REQ_VALUE_ERROR
@@ -16,10 +17,16 @@ class TestSuiteController(Resource):
 
     @classmethod
     def add_suite(cls, suite_data):
+        project_id = suite_data['project_id']
+        project_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
+        if project_data is None:
+            app.logger.info(f"测试计划id为{project_id}的数据不存在")
+            return None
         data = TestSuiteModel(**suite_data)
         db.session.add(data)
         db.session.commit()
         db.session.close()
+        return True
 
     @classmethod
     # 查询测试套件详情
@@ -164,11 +171,13 @@ class TestSuiteService(Resource):
             raise REQ_VALUE_ERROR()
 
         suite_data = request.json
-        TestSuiteController.add_suite(suite_data)
-        return make_response(
-            status=CodeUtil.SUCCESS,
-            data=suite_data
-        )
+        if TestSuiteController.add_suite(suite_data):
+            return make_response(
+                status=CodeUtil.SUCCESS,
+                data=suite_data
+            )
+        else:
+            return make_response(status=CodeUtil.FAIL)
 
     def put(self):
         if not request.data:
