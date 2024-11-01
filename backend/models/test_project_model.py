@@ -11,7 +11,7 @@ class TestProjectModel(db.Model):
     isDeleted = db.Column(db.Boolean, default=False, nullable=True)
     status = db.Column(db.Boolean, default=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(), nullable=True)
-    updated_at = db.Column(db.DateTime, default=datetime.now(), nullable=True)
+    updated_at = db.Column(db.DateTime, default=None, nullable=True)
     operation = db.Column(db.String(20), nullable=True)
 
     def __repr__(self):

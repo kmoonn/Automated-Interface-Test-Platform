@@ -24,45 +24,52 @@ class TestProjectController(Resource):
 
     @classmethod
     # 查询测试计划详情
-    def query_project_by_id(cls, project_id):
-        project_detail_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=False).first()
-        app.logger.info(f"查询的测试计划id为：{id}的详情数据为：{project_detail_data}")
+    def query_project_by_id(cls, id):
+        project_detail_data = TestProjectModel.query.filter_by(id=id, isDeleted=False).first()
+        app.logger.info(f"查询的测试计划id为：{id} 的详情数据为：{project_detail_data}")
         if project_detail_data is None:
             return []
-        app.logger.info(f"查询的测试计划id为：{id}的详情数据转化为json后：{project_detail_data.to_dict()}")
-        return project_detail_data.to_dict()
+        app.logger.info(f"查询的测试计划id为：{id} 的详情数据转化为json后：{project_detail_data.to_dict()}")
+        project_detail_data = project_detail_data.to_dict()
+        project_detail_data.update({"created_at": str(project_detail_data.get("created_at"))})
+        if project_detail_data.get("updated_at"):
+            project_detail_data.update({"updated_at": str(project_detail_data.get("updated_at"))})
+        app.logger.info(f"把日期对象转化为字符串之后，的结果为：{project_detail_data}")
+        return project_detail_data
 
     @classmethod
     # 根据测试计划的名称，搜索测试计划
     def query_project_by_name(cls, project_name):
         project_search_data = TestProjectModel.query.filter(
             TestProjectModel.project_name.like(f'%{project_name}%'),
-            TestProjectModel.isDeleted == 0).all()  # []
+            TestProjectModel.isDeleted == 0).all()
         app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据有：{project_search_data}")
 
         response_list = []
         for project_data in project_search_data:
             project_dictdata = project_data.to_dict()  # 把model中的数据转化成dict
-            project_dictdata.update({"create_time": str(project_dictdata.get("create_time"))})  # 修改创建时间对象为字符串对象
-            if project_dictdata.get("update_time"):
-                project_dictdata.update({"update_time": str(project_dictdata.get("update_time"))})
+            project_dictdata.update({"created_at": str(project_dictdata.get("created_at"))})  # 修改创建时间对象为字符串对象
+            if project_dictdata.get("updated_at"):
+                project_dictdata.update({"updated_at": str(project_dictdata.get("updated_at"))})
             response_list.append(project_dictdata)
         app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据并转化为json后：{response_list}")
         return response_list
 
     @classmethod
+    # 查询测试计划列表
     def query_list(cls, page=1, size=10):
         all_data = TestProjectModel.query \
             .filter(TestProjectModel.isDeleted == 0) \
             .slice((page - 1) * size, page * size) \
             .all()
         app.logger.info(f"查询出的测试计划列表数据为：{all_data}")
+
         response_list = []
         for project_data in all_data:
             project_dictdata = project_data.to_dict()  # 把model中的数据转化成dict
-            project_dictdata.update({"create_time": str(project_dictdata.get("create_time"))})  # 修改创建时间对象为字符串对象
-            if project_dictdata.get("update_time"):
-                project_dictdata.update({"update_time": str(project_dictdata.get("update_time"))})
+            project_dictdata.update({"created_at": str(project_dictdata.get("created_at"))})  # 修改创建时间对象为字符串对象
+            if project_dictdata.get("updated_at"):
+                project_dictdata.update({"updated_at": str(project_dictdata.get("updated_at"))})
             response_list.append(project_dictdata)
         app.logger.info(f"查询出的测试计划列表数据并转化为json为：{all_data}")
         return response_list
@@ -112,31 +119,31 @@ class TestProjectService(Resource):
             raise REQ_KEY_ERROR()
 
         action_type = request.args.get("type")
+
         if action_type == "query_detail":
             if not request.args.get("id"):
                 raise REQ_KEY_ERROR()
             response_data = TestProjectController.query_project_by_id(request.args.get("id"))
             if len(response_data) < 1:
                 return make_response(status=CodeUtil.SUCCESS, data=response_data)
-            response_data.update({"create_time": str(response_data.get("create_time"))})
-            if response_data.get("update_time"):  # 如果修改时间不为空，那么把修改时间转化为字符串类型
-                response_data.update({"update_time": str(response_data.get("update_time"))})
-            app.logger.info(f"把日期对象转化为字符串之后，的结果为：{response_data}")
             return make_response(status=CodeUtil.SUCCESS, data=response_data)
+
         if action_type == "search":
             if not request.args.get("project_name"):
                 raise REQ_KEY_ERROR()
             response_data = TestProjectController.query_project_by_name(request.args.get("project_name"))
+
             return make_response(status=CodeUtil.SUCCESS, data=response_data)
+
         if action_type == "query_list":
             page = request.args.get("page")
-            if page:  # 如果传入了page，那么判断page是不是数字，如果不是数字直接返回查询的空结果
+            if page:
                 if page.isdigit():
                     page = int(page)
                 else:
                     return make_response(status=CodeUtil.SUCCESS, data=[])
             size = request.args.get("size")
-            if size:  # 如果传入了size，那么判断size是不是数字，如果不是数字直接返回查询的空结果
+            if size:
                 if size.isdigit():
                     size = int(size)
                 else:
