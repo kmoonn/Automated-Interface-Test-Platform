@@ -82,6 +82,10 @@ class TestSuiteController(Resource):
 
     @classmethod
     def modify_suite(cls, id, project_id, suite_name, description):
+        project_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
+        if project_data is None:
+            app.logger.info(f"测试计划id为{project_id}的数据不存在")
+            return None
         origin_data = TestSuiteModel.query.filter_by(id=id, project_id=project_id, isDeleted=0).first()  # 根据id查询出之前的数据
         if not origin_data:
             return None
@@ -103,8 +107,11 @@ class TestSuiteController(Resource):
 
     @classmethod
     # 根据id查询要删除的数据
-    def delete_suite(cls, id):
-        origin_data = TestSuiteModel.query.filter_by(id=id, isDeleted=0).first()
+    def delete_suite(cls, id, project_id):
+        project_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
+        if project_data is None:
+            return None
+        origin_data = TestSuiteModel.query.filter_by(id=id, project_id=project_id, isDeleted=0).first()
         if not origin_data:
             return None
         TestSuiteModel.query.filter_by(id=id, isDeleted=0).update({"isDeleted": 1})
@@ -184,7 +191,7 @@ class TestSuiteService(Resource):
             raise REQ_IS_EMPTY_ERROR()
         if not request.is_json:
             raise REQ_TYPE_ERROR()
-        if not request.get_json().get("id") or not request.get_json().get("project_id"):
+        if not request.get_json().get("id"):
             raise REQ_KEY_ERROR()
 
         id = request.get_json().get("id")
@@ -193,17 +200,22 @@ class TestSuiteService(Resource):
         description = request.get_json().get("description")
 
         response_data = TestSuiteController.modify_suite(id, project_id, suite_name, description)
-        return make_response(status=CodeUtil.SUCCESS, data=response_data)
+        if response_data:
+            return make_response(status=CodeUtil.SUCCESS, data=response_data)
+        else:
+            return make_response(status=CodeUtil.FAIL)
 
     def delete(self):
         if not request.data:
             raise REQ_IS_EMPTY_ERROR()
         if not request.is_json:
             raise REQ_TYPE_ERROR()
-        if not request.get_json().get("id"):
+        if not request.get_json().get("id") or not request.get_json().get("project_id"):
             raise REQ_KEY_ERROR()
 
         id = request.get_json().get("id")
-
-        TestSuiteController.delete_suite(id)
-        return make_response(status=CodeUtil.SUCCESS, data=None)
+        project_id = request.get_json().get("project_id")
+        if TestSuiteController.delete_suite(id,project_id):
+            return make_response(status=CodeUtil.SUCCESS, data=None)
+        else:
+            return make_response(status=CodeUtil.FAIL)
