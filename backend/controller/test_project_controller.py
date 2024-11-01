@@ -88,7 +88,7 @@ class TestProjectController(Resource):
 
         if project_name or description:  # 外部传入的project_name和description至少要有一个不为空才能触发修改，才能有时间的修改
             update_time = str(datetime.datetime.now())
-            modify_data.update({"update_time": update_time})
+            modify_data.update({"updated_at": update_time})
         TestProjectModel.query.filter_by(id=id, isDeleted=0).update(modify_data)
         db.session.commit()
         db.session.close()
@@ -101,10 +101,7 @@ class TestProjectController(Resource):
         origin_data = TestProjectModel.query.filter_by(id=id, isDeleted=0).first()
         if not origin_data:
             return None
-        isDeleted = {
-            "isDeleted": 1
-        }
-        TestProjectModel.query.filter_by(id=id, isDeleted=0).update(isDeleted)
+        TestProjectModel.query.filter_by(id=id, isDeleted=0).update({"isDeleted": 1})
         db.session.commit()
         db.session.close()
 
@@ -155,7 +152,6 @@ class TestProjectService(Resource):
                                  total_count=total_count,
                                  page=page,
                                  size=size)
-        # 如果没有满足的if条件，那么返回json数据的结果
         return make_response(status=CodeUtil.SUCCESS)
 
     def post(self):
