@@ -199,4 +199,3 @@ class TestProjectService(Resource):
 
         TestProjectController.delete_project(id)
         return make_response(status=CodeUtil.SUCCESS, data=None)
-
