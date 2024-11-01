@@ -11,6 +11,7 @@ from backend.utils.exception_utils import REQ_IS_EMPTY_ERROR, REQ_TYPE_ERROR, RE
 from backend.utils.make_response_utils import make_response
 
 
+# 执行测试用例的任务
 def task_execute_testcase(caseid):
     case_data = TestCaseModel.query.filter(TestCaseModel.id == caseid, TestCaseModel.isDeleted == 0).first()
 
@@ -31,6 +32,7 @@ def task_execute_testcase(caseid):
     return response.json()
 
 
+# 使用线程池执行用例
 def mult_thread(poolsize=5, caseid_list=None, callback=None):
     pool = threadpool.ThreadPool(poolsize)
     req_list = threadpool.makeRequests(task_execute_testcase, caseid_list, callback)
@@ -72,5 +74,5 @@ class ExecuteTestcaseService(Resource):
         if len(caseid_list) < 1:
             raise ValueError()
 
-        ExecuteTestcaseController.execute_testcase(request.get_json())
-        return make_response(CodeUtil.SUCCESS, data=ExecuteTestcaseController.response_list)
+        result = ExecuteTestcaseController.execute_testcase(request.get_json())
+        return make_response(CodeUtil.SUCCESS, data=result)
