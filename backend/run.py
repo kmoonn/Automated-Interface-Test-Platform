@@ -1,9 +1,9 @@
 from backend.app import db, app, api
-from backend.controller.test_suite_controller import TestSuiteService
-from backend.models.test_project_model import TestProjectModel
-from backend.models.test_suite_model import TestSuiteModel
 from backend.controller.test_hello import IndexService
 from backend.controller.test_project_controller import TestProjectService
+from backend.controller.test_suite_controller import TestSuiteService
+from backend.controller.test_case_controller import TestCaseService
+
 
 if __name__ == '__main__':
     with app.app_context():
@@ -13,5 +13,6 @@ if __name__ == '__main__':
     api.add_resource(IndexService, '/')
     api.add_resource(TestProjectService, '/api/project')
     api.add_resource(TestSuiteService, '/api/suite')
+    api.add_resource(TestCaseService, '/api/case')
 
     app.run(debug=True)

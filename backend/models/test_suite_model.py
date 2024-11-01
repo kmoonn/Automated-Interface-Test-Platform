@@ -15,7 +15,7 @@ class TestSuiteModel(db.Model):
     operator = db.Column(db.String(20), nullable=True)
 
     project_id = db.Column(db.Integer, db.ForeignKey('test_project.id'), nullable=False)
-    project = db.relationship('TestProjectModel', backref=db.backref('test_suite'))
+    project = db.relationship('TestProjectModel', backref=db.backref('test_suite', lazy='dynamic'))
 
     def __repr__(self):
         return '<TestSuiteModel %r>' % self.suite_name
