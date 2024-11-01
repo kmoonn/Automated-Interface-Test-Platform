@@ -38,11 +38,11 @@ class TestSuiteController(Resource):
 
     @classmethod
     # 根据测试套件的名称，搜索测试计划
-    def query_suite_by_name(cls, project_name):
+    def query_suite_by_name(cls, suite_name):
         project_search_data = TestSuiteModel.query.filter(
-            TestSuiteModel.project_name.like(f'%{project_name}%'),
+            TestSuiteModel.project_name.like(f'%{suite_name}%'),
             TestSuiteModel.isDeleted == 0).all()
-        app.logger.info(f"根据测试套件名称 [{project_name}] 搜索出来的数据有：{project_search_data}")
+        app.logger.info(f"根据测试套件名称 [{suite_name}] 搜索出来的数据有：{project_search_data}")
 
         response_list = []
         for suite_data in project_search_data:
@@ -51,7 +51,7 @@ class TestSuiteController(Resource):
             if suite_dictdata.get("updated_at"):
                 suite_dictdata.update({"updated_at": str(suite_dictdata.get("updated_at"))})
             response_list.append(suite_dictdata)
-        app.logger.info(f"根据测试套件名称 [{project_name}] 搜索出来的数据并转化为json后：{response_list}")
+        app.logger.info(f"根据测试套件名称 [{suite_name}] 搜索出来的数据并转化为json后：{response_list}")
         return response_list
 
     @classmethod
@@ -74,12 +74,12 @@ class TestSuiteController(Resource):
         return response_list
 
     @classmethod
-    def modify_suite(cls, id, suite_name, description):
-        origin_data = TestSuiteModel.query.filter_by(id=id, isDeleted=0).first()  # 根据id查询出之前的数据
+    def modify_suite(cls, id, project_id, suite_name, description):
+        origin_data = TestSuiteModel.query.filter_by(id=id, project_id=project_id, isDeleted=0).first()  # 根据id查询出之前的数据
         if not origin_data:
             return None
-        origin_suite_name = origin_data.suite_name  # 读取数据库中的测试计划名称
-        origin_description = origin_data.description  # 读取数据库中的测试计划的备注
+        origin_suite_name = origin_data.suite_name  # 读取数据库中的测试套件名称
+        origin_description = origin_data.description  # 读取数据库中的测试套件的备注
         modify_data = {
             "project_name": suite_name if suite_name else origin_suite_name,
             "description": description if description else origin_description
@@ -166,23 +166,24 @@ class TestSuiteService(Resource):
         suite_data = request.json
         TestSuiteController.add_suite(suite_data)
         return make_response(
-                status=CodeUtil.SUCCESS,
-                data=suite_data
-            )
+            status=CodeUtil.SUCCESS,
+            data=suite_data
+        )
 
     def put(self):
         if not request.data:
             raise REQ_IS_EMPTY_ERROR()
         if not request.is_json:
             raise REQ_TYPE_ERROR()
-        if not request.get_json().get("id"):
+        if not request.get_json().get("id") or not request.get_json().get("project_id"):
             raise REQ_KEY_ERROR()
 
         id = request.get_json().get("id")
+        project_id = request.get_json().get("project_id")
         suite_name = request.get_json().get("suite_name")
         description = request.get_json().get("description")
 
-        response_data = TestSuiteController.modify_suite(id, suite_name, description)
+        response_data = TestSuiteController.modify_suite(id, project_id, suite_name, description)
         return make_response(status=CodeUtil.SUCCESS, data=response_data)
 
     def delete(self):
