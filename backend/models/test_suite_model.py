@@ -10,8 +10,8 @@ class TestSuiteModel(db.Model):
     description = db.Column(db.String(500), nullable=True)
     status = db.Column(db.Boolean, default=True, nullable=False)
     isDeleted = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now(), nullable=True)
+    updated_at = db.Column(db.DateTime, default=None, nullable=True)
     operator = db.Column(db.String(20), nullable=True)
 
     project_id = db.Column(db.Integer, db.ForeignKey('test_project.id'), nullable=False)

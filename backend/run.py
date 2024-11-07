@@ -8,7 +8,7 @@ from backend.controller.execute_testcase_controller import ExecuteTestcaseServic
 
 if __name__ == '__main__':
     with app.app_context():
-        db.drop_all()
+        # db.drop_all()
         db.create_all()
 
     api.add_resource(IndexService, '/')

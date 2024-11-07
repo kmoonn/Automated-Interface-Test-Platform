@@ -24,12 +24,12 @@ class TestProjectController(Resource):
 
     @classmethod
     # 查询测试计划详情
-    def query_project_by_id(cls, id):
-        project_detail_data = TestProjectModel.query.filter_by(id=id, isDeleted=False).first()
-        app.logger.info(f"查询的测试计划id为：{id} 的详情数据为：{project_detail_data}")
+    def query_project_by_id(cls, project_id):
+        project_detail_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=False).first()
+        app.logger.info(f"查询的测试计划id为：{project_id} 的详情数据为：{project_detail_data}")
         if project_detail_data is None:
             return []
-        app.logger.info(f"查询的测试计划id为：{id} 的详情数据转化为json后：{project_detail_data.to_dict()}")
+        app.logger.info(f"查询的测试计划id为：{project_id} 的详情数据转化为json后：{project_detail_data.to_dict()}")
         project_detail_data = project_detail_data.to_dict()
         project_detail_data.update({"created_at": str(project_detail_data.get("created_at"))})
         if project_detail_data.get("updated_at"):
@@ -75,8 +75,8 @@ class TestProjectController(Resource):
         return response_list
 
     @classmethod
-    def modify_project(cls, id, project_name, description):
-        origin_data = TestProjectModel.query.filter_by(id=id, isDeleted=0).first()  # 根据id查询出之前的数据
+    def modify_project(cls, project_id, project_name, description):
+        origin_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()  # 根据id查询出之前的数据
         if not origin_data:
             return None
         origin_project_name = origin_data.project_name  # 读取数据库中的测试计划名称
@@ -89,7 +89,7 @@ class TestProjectController(Resource):
         if project_name or description:  # 外部传入的project_name和description至少要有一个不为空才能触发修改，才能有时间的修改
             update_time = str(datetime.datetime.now())
             modify_data.update({"updated_at": update_time})
-        TestProjectModel.query.filter_by(id=id, isDeleted=0).update(modify_data)
+        TestProjectModel.query.filter_by(id=project_id, isDeleted=0).update(modify_data)
         db.session.commit()
         db.session.close()
 
@@ -97,13 +97,14 @@ class TestProjectController(Resource):
 
     @classmethod
     # 根据id查询要删除的数据
-    def delete_project(cls, id):
-        origin_data = TestProjectModel.query.filter_by(id=id, isDeleted=0).first()
+    def delete_project(cls, project_id):
+        origin_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
         if not origin_data:
             return None
-        TestProjectModel.query.filter_by(id=id, isDeleted=0).update({"isDeleted": 1})
+        TestProjectModel.query.filter_by(id=project_id, isDeleted=0).update({"isDeleted": 1})
         db.session.commit()
         db.session.close()
+        return True
 
 
 class TestProjectService(Resource):
@@ -180,12 +181,15 @@ class TestProjectService(Resource):
         if not request.get_json().get("id"):
             raise REQ_KEY_ERROR()
 
-        id = request.get_json().get("id")
+        project_id = request.get_json().get("id")
         project_name = request.get_json().get("project_name")
         description = request.get_json().get("description")
 
-        response_data = TestProjectController.modify_project(id, project_name, description)
-        return make_response(status=CodeUtil.SUCCESS, data=response_data)
+        response_data = TestProjectController.modify_project(project_id, project_name, description)
+        if response_data:
+            return make_response(status=CodeUtil.SUCCESS, data=response_data)
+        else:
+            return make_response(status=CodeUtil.FAIL, data="未找到或已删除")
 
     def delete(self):
         if not request.data:
@@ -195,7 +199,9 @@ class TestProjectService(Resource):
         if not request.get_json().get("id"):
             raise REQ_KEY_ERROR()
 
-        id = request.get_json().get("id")
+        project_id = request.get_json().get("id")
 
-        TestProjectController.delete_project(id)
-        return make_response(status=CodeUtil.SUCCESS, data=None)
+        if TestProjectController.delete_project(project_id):
+            return make_response(status=CodeUtil.SUCCESS, data=None)
+        else:
+            return make_response(status=CodeUtil.FAIL, data="未找到或已删除")

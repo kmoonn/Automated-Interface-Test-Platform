@@ -46,13 +46,13 @@ class TestSuiteController(Resource):
     @classmethod
     # 根据测试套件的名称，搜索测试计划
     def query_suite_by_name(cls, suite_name):
-        project_search_data = TestSuiteModel.query.filter(
-            TestSuiteModel.project_name.like(f'%{suite_name}%'),
+        suite_search_data = TestSuiteModel.query.filter(
+            TestSuiteModel.suite_name.like(f'%{suite_name}%'),
             TestSuiteModel.isDeleted == 0).all()
-        app.logger.info(f"根据测试套件名称 [{suite_name}] 搜索出来的数据有：{project_search_data}")
+        app.logger.info(f"根据测试套件名称 [{suite_name}] 搜索出来的数据有：{suite_search_data}")
 
         response_list = []
-        for suite_data in project_search_data:
+        for suite_data in suite_search_data:
             suite_dictdata = suite_data.to_dict()  # 把model中的数据转化成dict
             suite_dictdata.update({"created_at": str(suite_dictdata.get("created_at"))})  # 修改创建时间对象为字符串对象
             if suite_dictdata.get("updated_at"):
@@ -81,18 +81,18 @@ class TestSuiteController(Resource):
         return response_list
 
     @classmethod
-    def modify_suite(cls, id, project_id, suite_name, description):
+    def modify_suite(cls, suite_id, project_id, suite_name, description):
         project_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
         if project_data is None:
             app.logger.info(f"测试计划id为{project_id}的数据不存在")
-            return None
-        origin_data = TestSuiteModel.query.filter_by(id=id, project_id=project_id, isDeleted=0).first()  # 根据id查询出之前的数据
-        if not origin_data:
-            return None
+            return False
+        origin_data = TestSuiteModel.query.filter_by(id=suite_id, project_id=project_id, isDeleted=0).first()  # 根据id查询出之前的数据
+        if origin_data is None:
+            return False
         origin_suite_name = origin_data.suite_name  # 读取数据库中的测试套件名称
         origin_description = origin_data.description  # 读取数据库中的测试套件的备注
         modify_data = {
-            "project_name": suite_name if suite_name else origin_suite_name,
+            "suite_name": suite_name if suite_name else origin_suite_name,
             "description": description if description else origin_description
         }
 
@@ -107,16 +107,17 @@ class TestSuiteController(Resource):
 
     @classmethod
     # 根据id查询要删除的数据
-    def delete_suite(cls, id, project_id):
+    def delete_suite(cls, suite_id, project_id):
         project_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
         if project_data is None:
-            return None
-        origin_data = TestSuiteModel.query.filter_by(id=id, project_id=project_id, isDeleted=0).first()
-        if not origin_data:
-            return None
-        TestSuiteModel.query.filter_by(id=id, isDeleted=0).update({"isDeleted": 1})
+            return False
+        origin_data = TestSuiteModel.query.filter_by(id=suite_id, project_id=project_id, isDeleted=0).first()
+        if origin_data is None:
+            return False
+        TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).update({"isDeleted": 1})
         db.session.commit()
         db.session.close()
+        return True
 
 
 class TestSuiteService(Resource):
@@ -194,12 +195,12 @@ class TestSuiteService(Resource):
         if not request.get_json().get("id"):
             raise REQ_KEY_ERROR()
 
-        id = request.get_json().get("id")
+        suite_id = request.get_json().get("id")
         project_id = request.get_json().get("project_id")
         suite_name = request.get_json().get("suite_name")
         description = request.get_json().get("description")
 
-        response_data = TestSuiteController.modify_suite(id, project_id, suite_name, description)
+        response_data = TestSuiteController.modify_suite(suite_id, project_id, suite_name, description)
         if response_data:
             return make_response(status=CodeUtil.SUCCESS, data=response_data)
         else:
@@ -213,9 +214,9 @@ class TestSuiteService(Resource):
         if not request.get_json().get("id") or not request.get_json().get("project_id"):
             raise REQ_KEY_ERROR()
 
-        id = request.get_json().get("id")
+        suite_id = request.get_json().get("id")
         project_id = request.get_json().get("project_id")
-        if TestSuiteController.delete_suite(id,project_id):
+        if TestSuiteController.delete_suite(suite_id, project_id):
             return make_response(status=CodeUtil.SUCCESS, data=None)
         else:
             return make_response(status=CodeUtil.FAIL)
