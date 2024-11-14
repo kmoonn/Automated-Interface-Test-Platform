@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from flask import request
 from flask_restful import Resource
@@ -12,16 +12,16 @@ from backend.utils.make_response_utils import make_response
 
 
 class TestCaseController(Resource):
-    
+
     def __init__(self):
         pass
-    
+
     @classmethod
     def add_case(cls, case_data):
         suite_id = case_data['suite_id']
         suite_data = TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).first()
         if suite_data is None:
-            app.logger.info(f"测试计划id为{suite_id}的数据不存在")
+            app.logger.info(f"测试套件id为{suite_id}的数据不存在")
             return None
         data = TestCaseModel(**case_data)
         db.session.add(data)
@@ -31,35 +31,31 @@ class TestCaseController(Resource):
 
     @classmethod
     # 查询测试用例详情
-    def query_case_by_id(cls, id):
-        case_detail_data = TestCaseModel.query.filter_by(id=id, isDeleted=False).first()
-        app.logger.info(f"查询的测试用例id为：{id} 的详情数据为：{case_detail_data}")
+    def query_case_by_id(cls, case_id):
+        case_detail_data = TestCaseModel.query.filter_by(id=case_id, isDeleted=False).first()
         if case_detail_data is None:
             return []
-        app.logger.info(f"查询的测试用例id为：{id} 的详情数据转化为json后：{case_detail_data.to_dict()}")
         case_detail_data = case_detail_data.to_dict()
         case_detail_data.update({"created_at": str(case_detail_data.get("created_at"))})
         if case_detail_data.get("updated_at"):
             case_detail_data.update({"updated_at": str(case_detail_data.get("updated_at"))})
-        app.logger.info(f"把日期对象转化为字符串之后，的结果为：{case_detail_data}")
         return case_detail_data
 
     @classmethod
     # 根据测试用例的名称，搜索测试计划
     def query_case_by_name(cls, case_name):
-        project_search_data = TestCaseModel.query.filter(
-            TestCaseModel.project_name.like(f'%{case_name}%'),
+        case_search_data = TestCaseModel.query.filter(
+            TestCaseModel.case_name.like(f'%{case_name}%'),
             TestCaseModel.isDeleted == 0).all()
-        app.logger.info(f"根据测试用例名称 [{case_name}] 搜索出来的数据有：{project_search_data}")
+        app.logger.info(f"根据测试用例名称 [{case_name}] 搜索出来的数据有：{case_search_data}")
 
         response_list = []
-        for case_data in project_search_data:
+        for case_data in case_search_data:
             case_dictdata = case_data.to_dict()  # 把model中的数据转化成dict
             case_dictdata.update({"created_at": str(case_dictdata.get("created_at"))})  # 修改创建时间对象为字符串对象
             if case_dictdata.get("updated_at"):
                 case_dictdata.update({"updated_at": str(case_dictdata.get("updated_at"))})
             response_list.append(case_dictdata)
-        app.logger.info(f"根据测试用例名称 [{case_name}] 搜索出来的数据并转化为json后：{response_list}")
         return response_list
 
     @classmethod
@@ -78,29 +74,28 @@ class TestCaseController(Resource):
             if case_dictdata.get("updated_at"):
                 case_dictdata.update({"updated_at": str(case_dictdata.get("updated_at"))})
             response_list.append(case_dictdata)
-        app.logger.info(f"查询出的测试用例列表数据并转化为json为：{all_data}")
         return response_list
 
     @classmethod
-    def modify_case(cls, id, suite_id, case_name, description):
+    def modify_case(cls, case_id, suite_id, case_name, description):
         suite_data = TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).first()
         if suite_data is None:
             app.logger.info(f"测试计划id为{suite_id}的数据不存在")
             return None
-        origin_data = TestCaseModel.query.filter_by(id=id, suite_id=suite_id, isDeleted=0).first()  # 根据id查询出之前的数据
+        origin_data = TestCaseModel.query.filter_by(id=case_id, suite_id=suite_id, isDeleted=0).first()  # 根据id查询出之前的数据
         if not origin_data:
             return None
         origin_case_name = origin_data.case_name  # 读取数据库中的测试用例名称
         origin_description = origin_data.description  # 读取数据库中的测试用例的备注
         modify_data = {
-            "project_name": case_name if case_name else origin_case_name,
+            "case_name": case_name if case_name else origin_case_name,
             "description": description if description else origin_description
         }
 
-        if case_name or description:  # 外部传入的project_name和description至少要有一个不为空才能触发修改，才能有时间的修改
-            update_time = str(datetime.now())
+        if case_name or description:  # 外部传入的case_name和description至少要有一个不为空才能触发修改，才能有时间的修改
+            update_time = str(datetime.datetime.now())
             modify_data.update({"updated_at": update_time})
-        TestCaseModel.query.filter_by(id=id, isDeleted=0).update(modify_data)
+        TestCaseModel.query.filter_by(id=case_id, isDeleted=0).update(modify_data)
         db.session.commit()
         db.session.close()
 
@@ -108,16 +103,17 @@ class TestCaseController(Resource):
 
     @classmethod
     # 根据id查询要删除的数据
-    def delete_case(cls, id, suite_id):
+    def delete_case(cls, case_id, suite_id):
         suite_data = TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).first()
         if suite_data is None:
             return None
-        origin_data = TestCaseModel.query.filter_by(id=id, suite_id=suite_id, isDeleted=0).first()
+        origin_data = TestCaseModel.query.filter_by(id=case_id, suite_id=suite_id, isDeleted=0).first()
         if not origin_data:
             return None
-        TestCaseModel.query.filter_by(id=id, isDeleted=0).update({"isDeleted": 1})
+        TestCaseModel.query.filter_by(id=case_id, isDeleted=0).update({"isDeleted": 1})
         db.session.commit()
         db.session.close()
+        return True
 
 
 class TestCaseService(Resource):
@@ -196,12 +192,12 @@ class TestCaseService(Resource):
         if not request.get_json().get("id"):
             raise REQ_KEY_ERROR()
 
-        id = request.get_json().get("id")
+        case_id = request.get_json().get("id")
         suite_id = request.get_json().get("suite_id")
         case_name = request.get_json().get("case_name")
         description = request.get_json().get("description")
 
-        response_data = TestCaseController.modify_case(id, suite_id, case_name, description)
+        response_data = TestCaseController.modify_case(case_id, suite_id, case_name, description)
         if response_data:
             return make_response(status=CodeUtil.SUCCESS, data=response_data)
         else:
@@ -215,9 +211,9 @@ class TestCaseService(Resource):
         if not request.get_json().get("id") or not request.get_json().get("suite_id"):
             raise REQ_KEY_ERROR()
 
-        id = request.get_json().get("id")
+        case_id = request.get_json().get("id")
         suite_id = request.get_json().get("suite_id")
-        if TestCaseController.delete_case(id,suite_id):
+        if TestCaseController.delete_case(case_id, suite_id):
             return make_response(status=CodeUtil.SUCCESS, data=None)
         else:
             return make_response(status=CodeUtil.FAIL)
