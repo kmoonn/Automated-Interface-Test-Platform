@@ -12,8 +12,8 @@ from backend.utils.make_response_utils import make_response
 
 
 # 执行测试用例的任务
-def task_execute_testcase(caseid):
-    case_data = TestCaseModel.query.filter(TestCaseModel.id == caseid, TestCaseModel.isDeleted == 0).first()
+def task_execute_testcase(case_id):
+    case_data = TestCaseModel.query.filter(TestCaseModel.id == case_id, TestCaseModel.isDeleted == 0).first()
 
     method = case_data['method']
     protocol = case_data['protocol']
