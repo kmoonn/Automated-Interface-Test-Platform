@@ -77,7 +77,7 @@ class TestSuiteController(Resource):
             if suite_dictdata.get("updated_at"):
                 suite_dictdata.update({"updated_at": str(suite_dictdata.get("updated_at"))})
             response_list.append(suite_dictdata)
-        app.logger.info(f"查询出的测试套件列表数据并转化为json为：{all_data}")
+        # app.logger.info(f"查询出的测试套件列表数据并转化为json为：{all_data}")
         return response_list
 
     @classmethod

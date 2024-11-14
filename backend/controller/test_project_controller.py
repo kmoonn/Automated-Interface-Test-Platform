@@ -34,7 +34,7 @@ class TestProjectController(Resource):
         project_detail_data.update({"created_at": str(project_detail_data.get("created_at"))})
         if project_detail_data.get("updated_at"):
             project_detail_data.update({"updated_at": str(project_detail_data.get("updated_at"))})
-        app.logger.info(f"把日期对象转化为字符串之后，的结果为：{project_detail_data}")
+        # app.logger.info(f"把日期对象转化为字符串之后，的结果为：{project_detail_data}")
         return project_detail_data
 
     @classmethod
@@ -43,7 +43,7 @@ class TestProjectController(Resource):
         project_search_data = TestProjectModel.query.filter(
             TestProjectModel.project_name.like(f'%{project_name}%'),
             TestProjectModel.isDeleted == 0).all()
-        app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据有：{project_search_data}")
+        # app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据有：{project_search_data}")
 
         response_list = []
         for project_data in project_search_data:
@@ -52,7 +52,7 @@ class TestProjectController(Resource):
             if project_dictdata.get("updated_at"):
                 project_dictdata.update({"updated_at": str(project_dictdata.get("updated_at"))})
             response_list.append(project_dictdata)
-        app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据并转化为json后：{response_list}")
+        # app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据并转化为json后：{response_list}")
         return response_list
 
     @classmethod
@@ -71,7 +71,7 @@ class TestProjectController(Resource):
             if project_dictdata.get("updated_at"):
                 project_dictdata.update({"updated_at": str(project_dictdata.get("updated_at"))})
             response_list.append(project_dictdata)
-        app.logger.info(f"查询出的测试计划列表数据并转化为json为：{all_data}")
+        # app.logger.info(f"查询出的测试计划列表数据并转化为json为：{all_data}")
         return response_list
 
     @classmethod

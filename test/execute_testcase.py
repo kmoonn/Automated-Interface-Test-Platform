@@ -5,10 +5,11 @@ case_data = {
     'protocol': 'http',
     'host': '127.0.0.1',
     'port': 5000,
-    'path': 'api/case',
+    'path': '/api/case',
     'params': {
-        'type': 'query_detail',
-        'id': 3,
+        'type': 'query_list',
+        'page': 1,
+        'size':10
     },
     'headers': {
         'Accept': 'application/json',
@@ -32,4 +33,4 @@ url = f'{protocol}://{host}:{port}/{path}'
 
 response = requests.request(method=method, url=url, params=params, headers=headers, json=payload)
 
-print(response.json())
+print(response.url)

@@ -1,3 +1,5 @@
+import json
+
 import requests
 import threadpool
 from flask import request
@@ -13,23 +15,25 @@ from backend.utils.make_response_utils import make_response
 
 # 执行测试用例的任务
 def task_execute_testcase(case_id):
-    case_data = TestCaseModel.query.filter(TestCaseModel.id == case_id, TestCaseModel.isDeleted == 0).first()
+    with app.app_context():  # 推送应用上下文
+        case_data = TestCaseModel.query.filter(TestCaseModel.id == case_id, TestCaseModel.isDeleted == 0).first()
 
-    method = case_data['method']
-    protocol = case_data['protocol']
-    host = case_data['host']
-    port = case_data['port']
-    path = case_data['path']
-    params = case_data['params']
-    headers = case_data['headers']
-    payload = case_data['body']
-    predict = case_data['predict']
+        case_data = case_data.__dict__
+        method = case_data['method']
+        protocol = case_data['protocol']
+        host = case_data['host']
+        port = case_data['port']
+        path = case_data['path']
+        params = json.loads(case_data['params'])
+        headers = case_data['headers']
+        payload = case_data['body']
+        predict = case_data['predict']
 
-    url = f'{protocol}://{host}:{port}/{path}'
-    response = requests.request(method=method, url=url, params=params, headers=headers, json=payload)
-    app.logger.info(response.text)
+        url = f'{protocol}://{host}:{port}/{path}'
+        response = requests.request(method=method, url=url, params=params, headers=headers, json=payload)
+        app.logger.info(response.json())
 
-    return response.json()
+        return response.json()
 
 
 # 使用线程池执行用例
@@ -46,18 +50,18 @@ class ExecuteTestcaseController(Resource):
     @classmethod
     def execute_testcase(cls, testcase_data):
         caseid_list = testcase_data.get('caseid_list')
-        app.logger.info('ExecuteTestcase: caseid_list={}'.format(caseid_list))
+        app.logger.info('需要执行的测试用例编号列表为: {}'.format(caseid_list))
         valid_caseid_list = []
-        for caseid in caseid_list:
-            case_data = TestCaseModel.query.filter(TestCaseModel.id == caseid, TestCaseModel.isDeleted == 0).first()
-            if not case_data or not case_data.suite.isDeleted or not case_data.suite.projetc.isDeleted:
-                app.logger.info('ExecuteTestcase: caseid={} is invalid'.format(caseid))
+        for case_id in caseid_list:
+            case_data = TestCaseModel.query.filter(TestCaseModel.id == case_id, TestCaseModel.isDeleted == 0).first()
+            if (not case_data) or case_data.suite.isDeleted or case_data.suite.project.isDeleted:
+                # app.logger.info('case_id为{}的测试用例在数据库中查询不到'.format(case_id))
                 continue
             valid_caseid_list.append(case_data.id)
-        mult_thread(poolsize=POOL_SIZE, caseid_list=valid_caseid_list, callback=cls.collection_results())
+        mult_thread(poolsize=POOL_SIZE, caseid_list=valid_caseid_list, callback=cls.collection_results)
 
     @classmethod
-    def collection_results(cls, *args):
+    def collection_results(cls, *args, **kwargs):
         result = args[1]
         cls.response_list.append(result)
 
@@ -75,4 +79,5 @@ class ExecuteTestcaseService(Resource):
             raise ValueError()
 
         result = ExecuteTestcaseController.execute_testcase(request.get_json())
+        app.logger.info(result)
         return make_response(CodeUtil.SUCCESS, data=result)
