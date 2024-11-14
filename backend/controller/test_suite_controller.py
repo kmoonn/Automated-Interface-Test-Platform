@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from flask import request
 from flask_restful import Resource
@@ -97,9 +97,9 @@ class TestSuiteController(Resource):
         }
 
         if suite_name or description:  # 外部传入的project_name和description至少要有一个不为空才能触发修改，才能有时间的修改
-            update_time = str(datetime.now())
+            update_time = str(datetime.datetime.now())
             modify_data.update({"updated_at": update_time})
-        TestSuiteModel.query.filter_by(id=id, isDeleted=0).update(modify_data)
+        TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).update(modify_data)
         db.session.commit()
         db.session.close()
 
