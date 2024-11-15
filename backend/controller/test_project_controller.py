@@ -26,10 +26,8 @@ class TestProjectController(Resource):
     # 查询测试计划详情
     def query_project_by_id(cls, project_id):
         project_detail_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=False).first()
-        app.logger.info(f"查询的测试计划id为：{project_id} 的详情数据为：{project_detail_data}")
         if project_detail_data is None:
             return []
-        app.logger.info(f"查询的测试计划id为：{project_id} 的详情数据转化为json后：{project_detail_data.to_dict()}")
         project_detail_data = project_detail_data.to_dict()
         project_detail_data.update({"created_at": str(project_detail_data.get("created_at"))})
         if project_detail_data.get("updated_at"):
@@ -43,7 +41,6 @@ class TestProjectController(Resource):
         project_search_data = TestProjectModel.query.filter(
             TestProjectModel.project_name.like(f'%{project_name}%'),
             TestProjectModel.isDeleted == 0).all()
-        # app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据有：{project_search_data}")
 
         response_list = []
         for project_data in project_search_data:
@@ -52,7 +49,6 @@ class TestProjectController(Resource):
             if project_dictdata.get("updated_at"):
                 project_dictdata.update({"updated_at": str(project_dictdata.get("updated_at"))})
             response_list.append(project_dictdata)
-        # app.logger.info(f"根据测试计划名称 [{project_name}] 搜索出来的数据并转化为json后：{response_list}")
         return response_list
 
     @classmethod
@@ -62,7 +58,6 @@ class TestProjectController(Resource):
             .filter(TestProjectModel.isDeleted == 0) \
             .slice((page - 1) * size, page * size) \
             .all()
-        app.logger.info(f"查询出的测试计划列表数据为：{all_data}")
 
         response_list = []
         for project_data in all_data:
@@ -71,7 +66,6 @@ class TestProjectController(Resource):
             if project_dictdata.get("updated_at"):
                 project_dictdata.update({"updated_at": str(project_dictdata.get("updated_at"))})
             response_list.append(project_dictdata)
-        # app.logger.info(f"查询出的测试计划列表数据并转化为json为：{all_data}")
         return response_list
 
     @classmethod

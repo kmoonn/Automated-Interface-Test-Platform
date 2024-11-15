@@ -20,7 +20,6 @@ class TestSuiteController(Resource):
         project_id = suite_data['project_id']
         project_data = TestProjectModel.query.filter_by(id=project_id, isDeleted=0).first()
         if project_data is None:
-            app.logger.info(f"测试计划id为{project_id}的数据不存在")
             return None
         data = TestSuiteModel(**suite_data)
         db.session.add(data)
@@ -32,15 +31,12 @@ class TestSuiteController(Resource):
     # 查询测试套件详情
     def query_suite_by_id(cls, id):
         suite_detail_data = TestSuiteModel.query.filter_by(id=id, isDeleted=False).first()
-        app.logger.info(f"查询的测试套件id为：{id} 的详情数据为：{suite_detail_data}")
         if suite_detail_data is None:
             return []
-        app.logger.info(f"查询的测试套件id为：{id} 的详情数据转化为json后：{suite_detail_data.to_dict()}")
         suite_detail_data = suite_detail_data.to_dict()
         suite_detail_data.update({"created_at": str(suite_detail_data.get("created_at"))})
         if suite_detail_data.get("updated_at"):
             suite_detail_data.update({"updated_at": str(suite_detail_data.get("updated_at"))})
-        app.logger.info(f"把日期对象转化为字符串之后，的结果为：{suite_detail_data}")
         return suite_detail_data
 
     @classmethod
@@ -49,7 +45,6 @@ class TestSuiteController(Resource):
         suite_search_data = TestSuiteModel.query.filter(
             TestSuiteModel.suite_name.like(f'%{suite_name}%'),
             TestSuiteModel.isDeleted == 0).all()
-        app.logger.info(f"根据测试套件名称 [{suite_name}] 搜索出来的数据有：{suite_search_data}")
 
         response_list = []
         for suite_data in suite_search_data:
@@ -58,7 +53,6 @@ class TestSuiteController(Resource):
             if suite_dictdata.get("updated_at"):
                 suite_dictdata.update({"updated_at": str(suite_dictdata.get("updated_at"))})
             response_list.append(suite_dictdata)
-        app.logger.info(f"根据测试套件名称 [{suite_name}] 搜索出来的数据并转化为json后：{response_list}")
         return response_list
 
     @classmethod
@@ -68,7 +62,6 @@ class TestSuiteController(Resource):
             .filter(TestSuiteModel.isDeleted == 0) \
             .slice((page - 1) * size, page * size) \
             .all()
-        app.logger.info(f"查询出的测试套件列表数据为：{all_data}")
 
         response_list = []
         for suite_data in all_data:
@@ -77,7 +70,6 @@ class TestSuiteController(Resource):
             if suite_dictdata.get("updated_at"):
                 suite_dictdata.update({"updated_at": str(suite_dictdata.get("updated_at"))})
             response_list.append(suite_dictdata)
-        # app.logger.info(f"查询出的测试套件列表数据并转化为json为：{all_data}")
         return response_list
 
     @classmethod

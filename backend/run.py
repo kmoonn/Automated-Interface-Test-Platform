@@ -1,4 +1,7 @@
 from backend.app import db, app, api
+
+from backend.models.test_report_model import TestReportModel
+
 from backend.controller.test_hello import IndexService
 from backend.controller.test_project_controller import TestProjectService
 from backend.controller.test_suite_controller import TestSuiteService
@@ -8,7 +11,7 @@ from backend.controller.test_user_controller import TestUserService
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.drop_all()
+        db.drop_all()
         db.create_all()
 
     api.add_resource(IndexService, '/')

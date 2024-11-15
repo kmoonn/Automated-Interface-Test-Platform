@@ -21,7 +21,6 @@ class TestCaseController(Resource):
         suite_id = case_data['suite_id']
         suite_data = TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).first()
         if suite_data is None:
-            app.logger.info(f"测试套件id为{suite_id}的数据不存在")
             return None
         data = TestCaseModel(**case_data)
         db.session.add(data)
@@ -47,7 +46,6 @@ class TestCaseController(Resource):
         case_search_data = TestCaseModel.query.filter(
             TestCaseModel.case_name.like(f'%{case_name}%'),
             TestCaseModel.isDeleted == 0).all()
-        app.logger.info(f"根据测试用例名称 [{case_name}] 搜索出来的数据有：{case_search_data}")
 
         response_list = []
         for case_data in case_search_data:
@@ -61,11 +59,7 @@ class TestCaseController(Resource):
     @classmethod
     # 查询测试用例列表
     def query_list(cls, page=1, size=10):
-        all_data = TestCaseModel.query \
-            .filter(TestCaseModel.isDeleted == 0) \
-            .slice((page - 1) * size, page * size) \
-            .all()
-        app.logger.info(f"查询出的测试用例列表数据为：{all_data}")
+        all_data = TestCaseModel.query.filter(TestCaseModel.isDeleted == 0).slice((page - 1) * size, page * size).all()
 
         response_list = []
         for case_data in all_data:
@@ -80,7 +74,6 @@ class TestCaseController(Resource):
     def modify_case(cls, case_id, suite_id, case_name, description):
         suite_data = TestSuiteModel.query.filter_by(id=suite_id, isDeleted=0).first()
         if suite_data is None:
-            app.logger.info(f"测试计划id为{suite_id}的数据不存在")
             return None
         origin_data = TestCaseModel.query.filter_by(id=case_id, suite_id=suite_id, isDeleted=0).first()  # 根据id查询出之前的数据
         if not origin_data:

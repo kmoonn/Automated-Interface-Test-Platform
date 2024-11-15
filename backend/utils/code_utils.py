@@ -19,7 +19,7 @@ class CodeUtil:
     MSG = {
         SUCCESS: '成功',
         FAIL: '失败',
-        ERROR: '异常',
+        ERROR: '错误',
 
         REQ_IS_EMPTY_ERROR: "请求数据不能为空",
         REQ_TYPE_ERROR: "请求数据类型错误",
