@@ -8,6 +8,7 @@ import requests
 import threadpool
 from flask import request
 from flask_restful import Resource
+from requests.adapters import HTTPAdapter
 
 from backend.app import app, db
 from backend.config import POOL_SIZE
@@ -50,7 +51,11 @@ def task_execute_testcase(case_id):
         payload = case_data['body']
         predict = case_data['predict']
         url = f'{protocol}://{host}:{port}/{path}'
-        response = requests.request(method=method, url=url, params=params, headers=headers, json=payload)
+
+        session = requests.Session()
+        session.mount('http://', HTTPAdapter(max_retries=3))
+        session.mount('https://', HTTPAdapter(max_retries=3))
+        response = session.request(method=method, url=url, params=params, headers=headers, json=payload)
         end_time = datetime.datetime.now()
         time_delta = str((end_time - start_time).total_seconds())
 
@@ -138,6 +143,10 @@ class ExecuteTestcaseController(Resource):
         db.session.close()
 
         return cls.response_list
+
+    @classmethod
+    def execute_casesuite(cls, test_suite_data):
+        pass
 
     @classmethod
     def collection_results(cls, *args):
