@@ -9,6 +9,7 @@ from backend.controller.test_case_controller import TestCaseService
 from backend.controller.execute_testcase_controller import ExecuteTestcaseService
 from backend.controller.test_user_controller import TestUserService
 
+
 if __name__ == '__main__':
     with app.app_context():
         db.drop_all()
